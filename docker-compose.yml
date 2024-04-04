@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  scalp_trader:
+    # restart: unless-stopped
+    image: scalp_trader
+    build: .
+    ports:
+      - "80:80"
+    volumes:
+      - .:/app
+    command: python ./main.py
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    env_file: 
+      - .env
