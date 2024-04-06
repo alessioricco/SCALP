@@ -1,0 +1,32 @@
+# from abc import ABC, abstractmethod
+# # import AbstractDataStateMachine
+# import StateMachines.MACDStateMachine as MACDStateMachine
+# import StateMachines.StochasticRSIStateMachine as StochasticRSIStateMachine
+# import Strategies.MacdStochTradingStrategy as MacdStochTradingStrategy
+
+# # Assume macd_sm and stochastic_sm are instances of your state machines
+# macd_sm = MACDStateMachine()
+# stochastic_sm = StochasticRSIStateMachine()
+
+# # Configure state machines (not shown, but includes setting up states and transitions)
+
+# # Initialize the strategy with the state machines
+# strategy = MacdStochTradingStrategy(macd_sm, stochastic_sm)
+
+# # Sample indicator states update process (conceptual, assuming DataFrame 'df')
+# for index, row in df.iterrows():
+#     # Update state machines with the current row's data
+#     macd_sm.process_row(row)
+#     stochastic_sm.process_row(row)
+
+#     # Collect current states
+#     indicator_states = {
+#         'macd': macd_sm.state,
+#         'stochastic': stochastic_sm.state
+#     }
+
+#     # Make trading decisions based on the current states
+#     if strategy.should_buy(indicator_states):
+#         print("Executing Buy at index", index)
+#     elif strategy.should_sell(indicator_states):
+#         print("Executing Sell at index", index)
