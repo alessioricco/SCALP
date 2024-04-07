@@ -42,5 +42,6 @@ class AbstractDataStateMachine(ABC):
 
     def _after_state_change(self):
         """A callback executed after each state change."""
-        console.print(f"[italic]{self.__class__.__name__} transitioned to {self.state}[/italic]")
+        # console.print(f"[italic]{self.__class__.__name__} transitioned to {self.state}[/italic]")
+        pass
 

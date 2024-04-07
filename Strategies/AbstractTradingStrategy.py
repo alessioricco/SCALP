@@ -1,21 +1,27 @@
 from abc import ABC, abstractmethod
 import datetime
-
 from pandas import DataFrame, Series
 from StateMachines.AbstractDataStateMachine import AbstractDataStateMachine
+from rich.console import Console
+console = Console()
 
 class AbstractTradingStrategy(ABC):
     
     def __init__(self, symbol=''):
-        self.last_printed_value = None
+        self.last_printed_value = {}
         self.symbol = symbol
     
-    def print_no_repeat(self, value):
-        if value != self.last_printed_value:
+    def print_no_repeat(self, key, value):
+        if key not in self.last_printed_value:
+            self.last_printed_value[key] = None
+        if value != self.last_printed_value[key]:
             now = datetime.datetime.now(datetime.UTC)
-            print(f"{now} | {self.symbol} | {value}")
+            console.print(f"{now} | {self.symbol} | {value}")
             # print(value)
-            self.last_printed_value = value    
+            self.last_printed_value[key] = value    
+    
+    def getSymbolAndTimeFrame(self):
+        return self.symbol
     
     @abstractmethod
     def enrich_dataset(self, df:DataFrame):

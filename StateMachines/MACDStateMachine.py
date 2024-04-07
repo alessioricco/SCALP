@@ -1,6 +1,7 @@
 from pandas import DataFrame, Series
 from StateMachines.AbstractDataStateMachine import AbstractDataStateMachine
 from ta.trend import MACD
+import common
 
 class MACDStateMachine(AbstractDataStateMachine):
         
@@ -8,6 +9,8 @@ class MACDStateMachine(AbstractDataStateMachine):
         self.states = ['neutral', 'bullish_cross', 'bearish_cross']
         # self.initial_state = 'neutral'
         self.configure_machine()
+        self.macd_positive = False
+        self.macd_negative = False
 
     def enrich_dataset(self, df:DataFrame):
         """
@@ -41,7 +44,18 @@ class MACDStateMachine(AbstractDataStateMachine):
         df['macd_bullish_crossover_positive'] = df['macd_bullish_crossover'] & df['macd_negative']
         df['macd_bearish_crossover_negative'] = df['macd_bearish_crossover'] & df['macd_positive']       
 
+        self.macd_positive = df['macd_positive'].iloc[-1]
+        self.macd_negative = df['macd_negative'].iloc[-1]
 
+        df['macd_slope'] = common.calc_slope(df,'macd')
+        df['macd_signal_slope'] = common.calc_slope(df,'signal')
+
+        df['macd_trend'] = common.calc_trend(df,'macd_slope')
+        df['macd_change_of_trend'] = common.calc_change_of_trend(df,'macd_trend')
+        self.trend = common.last_value(df,'macd_trend')
+        self.change_of_trend = common.last_value(df,'macd_change_of_trend')
+        pass
+        
     def determine_trend(self, df):
         """
         Finds the most recent crossover type and returns the market situation.
@@ -119,3 +133,9 @@ class MACDStateMachine(AbstractDataStateMachine):
 
     def is_neutral_condition(self, trend):
         return trend == 'Neutral'
+    
+    # def is_positive(self, df:DataFrame):
+    #     return df['macd_positive'].iloc[-1] 
+
+    # def is_negative(self, df:DataFrame):
+    #     return df['macd_negative'].iloc[-1] 

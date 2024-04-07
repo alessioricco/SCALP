@@ -27,30 +27,26 @@ class MacdStochRSITradingStrategy(AbstractTradingStrategy):
         self.stochastic_sm.process(df)
         self.macd_state = self.macd_sm.getCurrentState()
         self.stochastic_state = self.stochastic_sm.getCurrentState()
-        self.print_no_repeat(f"MACD: {self.macd_state} STOCHRSI: {self.stochastic_state}")
+        self.stochastich_overbought = self.stochastic_sm.is_data_overbought(df)
+        self.stochastich_oversold = self.stochastic_sm.is_data_oversold(df)
+        
+        self.print_no_repeat("macd",f"MACD: {self.macd_state} STOCHRSI: {self.stochastic_state}")
         pass
         
     def should_buy(self):
         """Buy if both MACD and Stochastic indicators are in their bullish states."""
-        # macd_state = self.macd_sm.getCurrentState()
-        # stochastic_state = self.stochastic_sm.getCurrentState()
-        return self.macd_state == 'bullish_cross' and self.stochastic_state == 'bullish'
+        
+        return self.stochastich_oversold and self.macd_state == 'bullish_cross' and self.stochastic_state == 'bullish'
     
     def should_sell(self):
         """Sell if both MACD and Stochastic indicators are in their bearish states."""
-        # macd_state = self.macd_sm.getCurrentState()
-        # stochastic_state = self.stochastic_sm.getCurrentState()
-        return self.macd_state == 'bearish_cross' and self.stochastic_state == 'bearish'
+        return self.stochastich_overbought and self.macd_state == 'bearish_cross' and self.stochastic_state == 'bearish'
     
     def should_stopbuy(self):
         """Determines whether to stop buying based on indicator states."""
-        # macd_state = self.macd_sm.getCurrentState()
-        # stochastic_state = self.stochastic_sm.getCurrentState()
-        return self.macd_state == 'bearish_cross' or self.stochastic_state == 'bearish'
+        return self.stochastich_overbought or self.macd_state == 'bearish_cross' or self.stochastic_state == 'bearish'
     
     def should_stopsell(self):
         """Determines whether to stop selling based on indicator states."""
-        # macd_state = self.macd_sm.getCurrentState()
-        # stochastic_state = self.stochastic_sm.getCurrentState()
-        return self.macd_state == 'bullish_cross' or self.stochastic_state == 'bullish'
+        return self.stochastich_overbought or self.macd_state == 'bullish_cross' or self.stochastic_state == 'bullish'
 
