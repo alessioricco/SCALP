@@ -21,7 +21,7 @@ max_candles_to_fetch = 1000
 max_candles_to_check = 1000
 timeframes = ['1m']#, '15m', '1h', '4h', '1d']
 no_last_candle = True
-BUILD_DATASET_COLLECTION=True
+BUILD_DATASET_COLLECTION=False
 
 load_dotenv()
 apiKey = os.getenv('BYBIT_API_KEY')
@@ -95,7 +95,7 @@ async def run_bot():
                 # remove symbols in the form of SOL/USDC:xxxx
                 symbols = [symbol for symbol in symbols if symbol not in blacklist]
                 
-                # symbols = ['ETH/USDT:USDT']
+                symbols = ['ETH/USDT:USDT']
                 
                 # Process symbols in groups
                 group_size = 10

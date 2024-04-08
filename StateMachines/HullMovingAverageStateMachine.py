@@ -24,7 +24,8 @@ class HullMovingAverageStateMachine(AbstractDataStateMachine):
         df[f'{self.column}_change_of_trend'] = common.calc_change_of_trend(df,f'{self.column}_trend')
         self.change_of_trend = common.last_value(df,f'{self.column}_change_of_trend')
         self.trend = common.last_value(df,f'{self.column}_trend')
-
+        df[f'{self.column}_above_price'] = df[self.column] > df['close']
+        self.above_price = common.last_value(df,f'{self.column}_above_price')
         pass
 
     def print_df(self, df:DataFrame):
@@ -36,25 +37,32 @@ class HullMovingAverageStateMachine(AbstractDataStateMachine):
         self.machine.add_transition('to_neutral', '*', 'neutral', conditions=['is_neutral'])
 
     def process(self, df:DataFrame):
+        pass
+    
+        # try:
+            
+        #     # if self.is_price_above(df):
+        #     #     if self.state != 'uptrend':
+        #     #         self.to_uptrend()
 
-        try:
+        #     # if self.is_price_below(df):
+        #     #     if self.state != 'downtrend':
+        #     #         self.to_downtrend()
 
-            if self.is_uptrend(df):
-                if self.state != 'uptrend':
-                    self.to_uptrend()
-
-            if self.is_downtrend(df):
-                if self.state != 'downtrend':
-                    self.to_downtrend()
-
-        except Exception as e:
-            print(f"An exception occurred: {e}")
+        # except Exception as e:
+        #     print(f"An exception occurred: {e}")
 
     def is_uptrend(self, df:DataFrame):
-        return df[self.column].iloc[-1] < df['close'].iloc[-1] 
-
+        return self.trend == 'Uptrend'
+    
     def is_downtrend(self, df:DataFrame):
-        return df[self.column].iloc[-1] > df['close'].iloc[-1]
+        return self.trend == 'Downtrend'
+
+    # def is_price_above(self, df:DataFrame):
+    #     return df[self.column].iloc[-1] < df['close'].iloc[-1] 
+
+    # def is_price_below(self, df:DataFrame):
+    #     return df[self.column].iloc[-1] > df['close'].iloc[-1]
 
     def is_neutral(self, trend):
         # This might need additional logic to determine 'flat' slope accurately

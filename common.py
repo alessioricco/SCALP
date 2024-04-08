@@ -32,3 +32,25 @@ def last_value(df:DataFrame,column:str):
 
 
 
+# import numpy as np
+# import pandas as pd
+
+def weighted_moving_average(data, period):
+    weights = np.arange(1, period + 1)  # Weighting factors
+    return data.rolling(window=period).apply(lambda x: np.dot(x, weights) / weights.sum(), raw=True)
+
+def hull_moving_average(data, period):
+    half_period_wma = weighted_moving_average(data, period // 2)
+    full_period_wma = weighted_moving_average(data, period)
+    raw_hma = 2 * half_period_wma - full_period_wma
+    hma = weighted_moving_average(raw_hma, int(np.sqrt(period)))  # Final HMA calculation
+    return hma
+
+# # Example usage with a DataFrame
+# np.random.seed(42)  # For reproducible random data
+# data = pd.DataFrame({
+#     'Close': np.random.rand(100) * 10 + 100  # Simulating some closing prices
+# })
+
+# data['HMA16'] = hull_moving_average(data['Close'], 16)
+# print(data.tail())

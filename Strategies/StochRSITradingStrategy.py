@@ -43,6 +43,7 @@ class StochRSITradingStrategy(AbstractTradingStrategy):
         self.print_no_repeat("hma_state",f"HMA       : [bold]{self.hma_sm_state}[/bold]")
         self.print_no_repeat("hma_trend",f"HMA trend : [bold]{self.hma_sm.trend}[/bold]")
         self.print_no_repeat("hma_cot  ",f"HMA c_o_t : [bold]{self.hma_sm.change_of_trend}[/bold]")
+        self.print_no_repeat("hma>Close",f"HMA > $   : [bold]{self.hma_sm.above_price}[/bold]")
         
         self.macd_sm.process(df)
         self.macd_sm_state = self.macd_sm.getCurrentState()
