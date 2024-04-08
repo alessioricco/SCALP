@@ -22,11 +22,12 @@ python-dotenv==1.0.1
 pytz==2024.1
 requests==2.31.0
 rich==13.7.1
-scipy==1.13.0
 six==1.16.0
 ta==0.11.0
+technical-analysis==0.0.4
 transitions==0.9.0
 typing_extensions==4.10.0
 tzdata==2024.1
 urllib3==2.2.1
+watchdog==4.0.0
 yarl==1.9.4

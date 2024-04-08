@@ -18,7 +18,8 @@ class HullMovingAverageStateMachine(AbstractDataStateMachine):
         self.configure_machine()
         
     def enrich_dataset(self, df:DataFrame):
-        df[self.column] = EMAIndicator(df['close'],self.period).ema_indicator()
+        # df[self.column] = EMAIndicator(df['close'],self.period).ema_indicator()
+        df[self.column] = common.hull_moving_average(df['close'],self.period)
         df[f'{self.column}_slope'] = common.calc_slope(df,self.column)
         df[f'{self.column}_trend'] = common.calc_trend(df,f'{self.column}_slope')
         df[f'{self.column}_change_of_trend'] = common.calc_change_of_trend(df,f'{self.column}_trend')

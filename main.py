@@ -54,7 +54,7 @@ async def run_bot():
     symbols_list = exchange.load_markets()
     traders_pool = {}
 
-    strategy_builder = getStrategyBuilder('STOCHRSI')
+    strategy_builder = getStrategyBuilder('SIMPLE')
 
     def traders_pool_factory(strategy_builder, key):
         """
