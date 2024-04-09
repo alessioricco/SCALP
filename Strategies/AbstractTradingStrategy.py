@@ -23,6 +23,10 @@ class AbstractTradingStrategy(ABC):
     def getSymbolAndTimeFrame(self):
         return self.symbol
     
+    @staticmethod
+    def get_features_list(df:DataFrame):
+        return [x for x in df.columns if x[-1] == "_"]
+    
     @abstractmethod
     def enrich_dataset(self, df:DataFrame):
         """Determines whether to execute a sell based on indicator states."""
@@ -53,6 +57,3 @@ class AbstractTradingStrategy(ABC):
         """Determines whether to execute a sell based on indicator states."""
         pass
 
-    # def apply_strategy(self, trader:AbstractDataStateMachine):
-    #     """Applies the strategy sending messages to the state machine."""
-    #     pass

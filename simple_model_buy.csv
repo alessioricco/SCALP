@@ -1,0 +1,6 @@
+,macd_trend_,hma200_trend_,hma200_above_price_,macd_positive_,signal
+0,Uptrend,Not trending,True,False,Buy
+1,Not trending,Not trending,True,False,Buy
+2,Not trending,Downtrend,False,False,Buy
+3,Uptrend,Not trending,False,True,Buy
+4,Downtrend,Not trending,True,False,Buy

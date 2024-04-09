@@ -77,6 +77,20 @@ class TradingStateMachine(AbstractDataStateMachine):
             elif self.state == 'stop_sell' and not self.should_sell():
                 self.trigger('to_neutral_from_stop_sell')
 
+    def _after_state_change(self):
+        """A callback executed after each state change."""
+        # console.print(f"[italic]{self.__class__.__name__} transitioned to {self.state}[/italic]")
+        super()._after_state_change()
+        
+        if self.state == 'buy':
+            self.strategy.onBuy()
+        elif self.state == 'sell':
+            self.strategy.onSell()
+        elif self.state == 'stop_buy':
+            self.strategy.onStopBuy()
+        elif self.state == 'stop_sell':
+            self.strategy.onStopSell()
+        pass
         
     def process(self, df: DataFrame):
         """

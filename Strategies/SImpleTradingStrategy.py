@@ -1,4 +1,5 @@
 from pandas import DataFrame
+import pandas as pd
 from Strategies.AbstractTradingStrategy import AbstractTradingStrategy
 from ta.momentum import StochRSIIndicator
 from ta.trend import MACD
@@ -14,6 +15,7 @@ class SimpleTradingStrategy(AbstractTradingStrategy):
         # self.macd_sm:MACDStateMachine = macd_state_machine
         self.period = 200
         self.column = f'hma{self.period}'
+        self.model_df = self.read_model()
         super().__init__(symbol=symbol)
 
     def calc_stoch_rsi_bullish_crossover(self,df:DataFrame):
@@ -66,12 +68,12 @@ class SimpleTradingStrategy(AbstractTradingStrategy):
         df['stoch_rsi_k_slope'] = common.calc_slope(df,'stoch_rsi_k')
         df['stoch_rsi_d_slope'] = common.calc_slope(df,'stoch_rsi_d')
         df['stoch_rsi_trend_'] = common.calc_trend(df,'stoch_rsi_slope')
-        df['stoch_rsi_change_of_trend_'] = common.calc_change_of_trend(df,'stoch_rsi_trend')
+        df['stoch_rsi_change_of_trend_'] = common.calc_change_of_trend(df,'stoch_rsi_trend_')
         
         df[self.column] = common.hull_moving_average(df['close'],self.period)
         df[f'{self.column}_slope'] = common.calc_slope(df,self.column)
-        df[f'{self.column}_trend'] = common.calc_trend(df,f'{self.column}_slope')
-        df[f'{self.column}_change_of_trend_'] = common.calc_change_of_trend(df,f'{self.column}_trend')
+        df[f'{self.column}_trend_'] = common.calc_trend(df,f'{self.column}_slope')
+        df[f'{self.column}_change_of_trend_'] = common.calc_change_of_trend(df,f'{self.column}_trend_')
         df[f'{self.column}_above_price_'] = df[self.column] > df['close']
         # self.above_price = common.last_value(df,f'{self.column}_above_price')
         
@@ -89,9 +91,9 @@ class SimpleTradingStrategy(AbstractTradingStrategy):
         # df['macd_bullish_crossover_positive_'] = df['macd_bullish_crossover_'] & df['macd_negative']
         # df['macd_bearish_crossover_negative_'] = df['macd_bearish_crossover_'] & df['macd_positive_']       
         df['macd_slope'] = common.calc_slope(df,'macd')
-        df['macd_signal_slope'] = common.calc_slope(df,'signal')
+        df['macd_signal_slope'] = common.calc_slope(df,'macd_signal')
         df['macd_trend_'] = common.calc_trend(df,'macd_slope')
-        df['macd_change_of_trend_'] = common.calc_change_of_trend(df,'macd_trend')
+        df['macd_change_of_trend_'] = common.calc_change_of_trend(df,'macd_trend_')
 
     def last_value_of(self,df:DataFrame,column:str):
         return df[column].iloc[-1]
@@ -101,89 +103,71 @@ class SimpleTradingStrategy(AbstractTradingStrategy):
 
     def process(self, df:DataFrame):
         """Determines whether to execute a sell based on indicator states."""
-        # self.stochastic_sm.process(df)
-        # self.stochastic_state = self.stochastic_sm.getCurrentState()
         
         df_row = self.last_row_of(df)
         
         for key in df_row:
-            # print(f"{key} : {df_row[key]}")
             if key[-1] == "_":
-                self.print_no_repeat(key,f"{key}: {df_row[key]}")
-        
-        # stochastich_overbought = df_row["stoch_rsi_overbought_"] #self.stochastic_sm.is_data_overbought(df)
-        # stochastich_oversold = df_row["stoch_rsi_oversold_"] #self.stochastic_sm.is_data_oversold(df)
-        
-        # # self.print_no_repeat("stochrsi_state",f"STOCHRSI: [bold]{self.stochastic_state}[/bold]")
-        # if stochastich_overbought:
-        #     self.print_no_repeat("stochrsi_over","STOCHRSI: Overbought")
-        # if stochastich_oversold:
-        #     self.print_no_repeat("stochrsi_over","STOCHRSI: Oversold")
-        # self.print_no_repeat("stochrsi__trend",f"STOCHRSI trend : [bold]{df_row['stoch_rsi_trend']}[/bold]")
-        # self.print_no_repeat("stochrsi__cot  ",f"STOCHRSI c_o_t : [bold]{df_row['stoch_rsi_change_of_trend']}[/bold]")
-
-        # # self.hma_sm.process(df)
-        # # self.hma_sm_state = self.hma_sm.getCurrentState()
-        
-        # # self.print_no_repeat("hma_state",f"HMA       : [bold]{self.hma_sm_state}[/bold]")
-        # self.print_no_repeat("hma_trend",f"HMA trend : [bold]{df_row[f'{self.column}_trend']}[/bold]")
-        # self.print_no_repeat("hma_cot  ",f"HMA c_o_t : [bold]{f'{self.column}_change_of_trend'}[/bold]")
-        # self.print_no_repeat("hma>Close",f"HMA > $   : [bold]{f'{self.column}_above_price'}[/bold]")
-        
-        # # self.macd_sm.process(df)
-        # # self.macd_sm_state = self.macd_sm.getCurrentState()
-        # # self.print_no_repeat("macd",        f"MACD      : [bold]{self.macd_sm_state}[/bold]")
-        # self.print_no_repeat("macd_trend",  f"MACD trend: [bold]{df_row['macd_trend']}[/bold]")
-        # self.print_no_repeat("macd_cot  ",  f"MACD c_o_t: [bold]{df_row['macd_change_of_trend']}[/bold]")
-        
-        # # if self.macd_sm.macd_positive:
-        # self.print_no_repeat("macd_zero",f"MACD > 0   : {df_row['macd_positive']}")
-        # # else:
-        # # # elif self.macd_sm.macd_negative:
-        # #     self.print_no_repeat("macd_zero","MACD      : Negative")
-        
+                self.print_no_repeat(key,f"{key}: {df_row[key]}")    
+                
+        self.signal = self.check_signal(df)
+        self.last_close = df['close'].iloc[-1]    
         pass
-        
+    
+    def onBuy(self):
+        self.buy_price = self.last_close
+        pass
+    def onSell(self):
+        self.sell_price = self.last_close
+        pass
+    def onStopBuy(self):
+        self.buy_price = None
+        pass
+    def onStopSell(self):
+        self.sell_price = None
+        pass
+    
+    def read_model(self, filename:str = "./simple_model_buy.csv"):
+        # the model is a dataframe containing the feature columns and their value plus a column called "action" which is the target
+        return pd.read_csv(filename)
+        pass
+    
+    def check_signal(self, df:DataFrame):
+        # apply the model to the dataframe
+        # match the columns in the model with the columns in the dataframe
+        try:
+            df_columns = set(df.columns)
+            model_columns = set(self.get_features_list(self.model_df))
+
+            intersect_columns = list(df_columns.intersection(model_columns))
+
+            if len(intersect_columns) == len(model_columns):
+                if df.loc[df.index[-1], intersect_columns].equals(self.model_df.loc[0, intersect_columns]):
+                    return self.model_df.loc[0, 'signal']
+        except Exception as e:
+            print(f"An error occurred: {str(e)}")
+            return "Error"
+            # Handle the error or raise it again if needed
+        pass
+    
     def should_buy(self):
         """Buy if both MACD and Stochastic indicators are in their bullish states."""
-        # return (
-        #         # self.hma_sm_state == 'uptrend' and
-        #         self.macd_sm.macd_negative and 
-        #         self.macd_sm_state=="bullish_cross" and
-        #         (self.stochastich_oversold or self.stochastic_state == 'bullish_crossover') and
-        #         not self.stochastich_overbought
-        #         )
+        return self.signal == "Buy"
         pass
     
     def should_stopbuy(self):
         """Determines whether to stop buying based on indicator states."""
-        # if self.hma_sm_state == 'downtrend':
-        #     return True
-        # return (self.hma_sm_state == 'downtrend' or
-        #         self.macd_sm.macd_positive or 
-        #         self.stochastich_overbought or  
-        #         self.stochastic_state == 'bearish_crossover')
+        # return self.signal == "Buy"
+        return self.buy_price is not None and self.last_close < self.buy_price * 0.95
         pass
     
     def should_sell(self):
         """Sell if both MACD and Stochastic indicators are in their bearish states."""
-        # if not self.hma_sm_state == 'downtrend':
-        #     return False
-        # return self.macd_sm.macd_positive and self.stochastich_overbought and self.stochastic_state == 'bearish_crossover'
-        # return (
-        #         # self.hma_sm_state == 'downtrend' and
-        #         self.macd_sm.macd_positive and 
-        #         self.macd_sm_state=="bearish_cross" and
-        #         (self.stochastich_overbought or self.stochastic_state == 'bearish_crossover') and 
-        #         not self.stochastich_oversold)
+        return self.signal == "Sell"
         pass
 
     def should_stopsell(self):
         """Determines whether to stop selling based on indicator states."""
-        # if self.hma_sm_state == 'uptrend':
-        #     return True
-        # return (self.hma_sm_state == 'uptrend' or 
-        #         self.macd_sm.macd_negative or 
-        #         self.stochastich_oversold or 
-        #         self.stochastic_state == 'bullish_crossover')
+        # return True
+        return self.sell_price is not None and self.last_close > self.sell_price * 1.05
         pass
