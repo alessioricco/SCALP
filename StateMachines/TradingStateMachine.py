@@ -3,7 +3,11 @@ from StateMachines.AbstractDataStateMachine import AbstractDataStateMachine
 from Strategies.AbstractTradingStrategy import AbstractTradingStrategy
 
 class TradingStateMachine(AbstractDataStateMachine):
+    
+    __slots__ = ['_strategy','states']
+    
     def __init__(self, strategy: AbstractTradingStrategy):
+        # self.states = ['neutral', 'buy', 'sell', 'stop_buy', 'stop_sell']
         self._strategy = strategy
         super().__init__()
 
@@ -31,7 +35,6 @@ class TradingStateMachine(AbstractDataStateMachine):
         # Optional: Direct transition back to neutral if conditions are immediately met
         self.machine.add_transition(trigger='reset_to_neutral', source=['buy', 'sell', 'stop_buy', 'stop_sell'], dest='neutral', conditions=['should_reset'])
         
-
     def should_buy(self):
         return self.strategy.should_buy()
 

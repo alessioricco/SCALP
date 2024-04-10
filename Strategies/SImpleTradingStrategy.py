@@ -7,14 +7,11 @@ import common
 
 class SimpleTradingStrategy(AbstractTradingStrategy):
     
-    # __slots__ = ['stochastic_sm', 'stochastic_state', 'stochastich_overbought', 'stochastich_oversold']
+    __slots__ = ['buy_price', 'sell_price', 'signal', 'period', 'hma_column', 'model_df']
     
     def __init__(self, symbol:str):
-        # self.stochastic_sm:StochasticRSIStateMachine = stochastic_state_machine
-        # self.hma_sm:HullMovingAverageStateMachine = hma_state_machine
-        # self.macd_sm:MACDStateMachine = macd_state_machine
         self.period = 200
-        self.column = f'hma{self.period}'
+        self.hma_column = f'hma{self.period}'
         self.model_df = self.read_model()
         super().__init__(symbol=symbol)
 
@@ -70,11 +67,11 @@ class SimpleTradingStrategy(AbstractTradingStrategy):
         df['stoch_rsi_trend_'] = common.calc_trend(df,'stoch_rsi_slope')
         df['stoch_rsi_change_of_trend_'] = common.calc_change_of_trend(df,'stoch_rsi_trend_')
         
-        df[self.column] = common.hull_moving_average(df['close'],self.period)
-        df[f'{self.column}_slope'] = common.calc_slope(df,self.column)
-        df[f'{self.column}_trend_'] = common.calc_trend(df,f'{self.column}_slope')
-        df[f'{self.column}_change_of_trend_'] = common.calc_change_of_trend(df,f'{self.column}_trend_')
-        df[f'{self.column}_above_price_'] = df[self.column] > df['close']
+        df[self.hma_column] = common.hull_moving_average(df['close'],self.period)
+        df[f'{self.hma_column}_slope'] = common.calc_slope(df,self.hma_column)
+        df[f'{self.hma_column}_trend_'] = common.calc_trend(df,f'{self.hma_column}_slope')
+        df[f'{self.hma_column}_change_of_trend_'] = common.calc_change_of_trend(df,f'{self.hma_column}_trend_')
+        df[f'{self.hma_column}_above_price_'] = df[self.hma_column] > df['close']
         # self.above_price = common.last_value(df,f'{self.column}_above_price')
         
         # Assuming MACD and Signal Line have already been calculated
@@ -104,14 +101,16 @@ class SimpleTradingStrategy(AbstractTradingStrategy):
     def process(self, df:DataFrame):
         """Determines whether to execute a sell based on indicator states."""
         
+        self.signal = self.check_signal(df)
+        self.last_close = df['close'].iloc[-1]          
+        
         df_row = self.last_row_of(df)
         
+        self.print_no_repeat("value",f"{self.last_close}")    
         for key in df_row:
             if key[-1] == "_":
                 self.print_no_repeat(key,f"{key}: {df_row[key]}")    
                 
-        self.signal = self.check_signal(df)
-        self.last_close = df['close'].iloc[-1]    
         pass
     
     def onBuy(self):
@@ -127,9 +126,14 @@ class SimpleTradingStrategy(AbstractTradingStrategy):
         self.sell_price = None
         pass
     
-    def read_model(self, filename:str = "./simple_model_buy.csv"):
+    def read_model(self) -> DataFrame:
         # the model is a dataframe containing the feature columns and their value plus a column called "action" which is the target
-        return pd.read_csv(filename)
+        
+        model_buy:DataFrame = pd.read_csv("./simple_model_buy.csv")
+        model_sell:DataFrame = pd.read_csv("./simple_model_sell.csv")
+
+        model:DataFrame = pd.concat([model_buy, model_sell], ignore_index=True)
+        return model
         pass
     
     def check_signal(self, df:DataFrame):
@@ -138,12 +142,19 @@ class SimpleTradingStrategy(AbstractTradingStrategy):
         try:
             df_columns = set(df.columns)
             model_columns = set(self.get_features_list(self.model_df))
-
             intersect_columns = list(df_columns.intersection(model_columns))
 
+            max_diff = 0
             if len(intersect_columns) == len(model_columns):
-                if df.loc[df.index[-1], intersect_columns].equals(self.model_df.loc[0, intersect_columns]):
-                    return self.model_df.loc[0, 'signal']
+                for df_index in range(len(self.model_df)):
+                    if df.loc[df.index[-1], intersect_columns].equals(self.model_df.loc[df_index, intersect_columns]):
+                        return self.model_df.loc[df_index, 'signal']
+                    else:
+                        diff = sum(df.loc[df.index[-1], intersect_columns] != self.model_df.loc[df_index, intersect_columns])
+                        if diff > max_diff:
+                            max_diff = diff
+                self.print_no_repeat("score", "🟢" * (len(intersect_columns) - max_diff) + "🔴" * max_diff)
+                
         except Exception as e:
             print(f"An error occurred: {str(e)}")
             return "Error"
@@ -157,8 +168,7 @@ class SimpleTradingStrategy(AbstractTradingStrategy):
     
     def should_stopbuy(self):
         """Determines whether to stop buying based on indicator states."""
-        # return self.signal == "Buy"
-        return self.buy_price is not None and self.last_close < self.buy_price * 0.95
+        return self.buy_price is not None and self.last_close > self.buy_price * 1.05
         pass
     
     def should_sell(self):
@@ -169,5 +179,5 @@ class SimpleTradingStrategy(AbstractTradingStrategy):
     def should_stopsell(self):
         """Determines whether to stop selling based on indicator states."""
         # return True
-        return self.sell_price is not None and self.last_close > self.sell_price * 1.05
+        return self.sell_price is not None and self.last_close < self.sell_price * 0.95
         pass

@@ -20,7 +20,7 @@ process_semaphore = asyncio.Semaphore(1)
 max_candles_to_fetch = 1000
 max_candles_to_check = 1000
 timeframes = ['1m']#, '15m', '1h', '4h', '1d']
-no_last_candle = True
+no_last_candle = False
 BUILD_DATASET_COLLECTION=False
 
 load_dotenv()
