@@ -18,8 +18,9 @@ def calc_slope(df:DataFrame,value_column:str="close",window=10)->Series:
 
 def calc_trend(df:DataFrame,slope_column:str,tolerance=0.0001)->Series:
     # Determine the trend based on the slope
-    return Series(np.where(np.abs(df[slope_column]) <= tolerance, 'Not trending',
+    s = Series(np.where(np.abs(df[slope_column]) <= tolerance, 'Not trending',
               np.where(df[slope_column] > 0, 'Uptrend', 'Downtrend')))
+    return s
 
 def calc_change_of_trend(df: DataFrame, trend_column: str) -> None:
     return Series( np.where(df[trend_column].shift() != df[trend_column], 

@@ -21,7 +21,7 @@ class TradingStateMachine(AbstractDataStateMachine):
         self.configure_machine()
 
     def enrich_dataset(self, df:DataFrame):
-        pass
+        self.strategy.enrich_dataset(df)
 
     def configure_transitions(self):
         self.machine.add_transition(trigger='buy', source='neutral', dest='buy', conditions=['should_buy'])

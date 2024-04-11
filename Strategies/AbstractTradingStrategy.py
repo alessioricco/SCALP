@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import asyncio
 import datetime
 from pandas import DataFrame, Series
 from StateMachines.AbstractDataStateMachine import AbstractDataStateMachine
@@ -12,6 +13,7 @@ class AbstractTradingStrategy(ABC):
         self.symbol = symbol
     
     def print_no_repeat(self, key, value):
+        # asyncio.run(self.print_no_repeat_async(key, value))
         if key not in self.last_printed_value:
             self.last_printed_value[key] = None
         if value != self.last_printed_value[key]:
@@ -19,6 +21,9 @@ class AbstractTradingStrategy(ABC):
             console.print(f"{now} | {self.symbol} | {value}")
             # print(value)
             self.last_printed_value[key] = value    
+    
+    async def print_no_repeat_async(self, key, value):
+        self.print_no_repeat(key, value)    
     
     def getSymbolAndTimeFrame(self):
         return self.symbol

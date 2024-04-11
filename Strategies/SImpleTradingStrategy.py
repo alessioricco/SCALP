@@ -1,3 +1,4 @@
+import asyncio
 from pandas import DataFrame
 import pandas as pd
 from Strategies.AbstractTradingStrategy import AbstractTradingStrategy
@@ -84,9 +85,7 @@ class SimpleTradingStrategy(AbstractTradingStrategy):
         df['macd_bullish_crossover_'] = ((df['macd_diff'] > 0) & (df['prev_macd_diff'] <= 0)) 
         # Identify bearish crossover with both MACD and signal lines being positive
         df['macd_bearish_crossover_'] = ((df['macd_diff'] < 0) & (df['prev_macd_diff'] >= 0)) 
-        df['macd_positive_'] = df['macd_diff'] >= 0
-        # df['macd_bullish_crossover_positive_'] = df['macd_bullish_crossover_'] & df['macd_negative']
-        # df['macd_bearish_crossover_negative_'] = df['macd_bearish_crossover_'] & df['macd_positive_']       
+        df['macd_positive_'] = df['macd_diff'] >= 0  
         df['macd_slope'] = common.calc_slope(df,'macd')
         df['macd_signal_slope'] = common.calc_slope(df,'macd_signal')
         df['macd_trend_'] = common.calc_trend(df,'macd_slope')
@@ -98,20 +97,24 @@ class SimpleTradingStrategy(AbstractTradingStrategy):
     def last_row_of(self,df:DataFrame):
         return df.iloc[-1].to_dict()
 
+    async def print_data(self, df_row:dict, last_close:float):
+        await self.print_no_repeat_async("value", f"{last_close}")
+        tasks = []
+        for key in df_row:
+            if key[-1] == "_":
+                tasks.append(asyncio.create_task(self.print_no_repeat_async(key, f"{key}: {df_row[key]}")))
+        await asyncio.gather(*tasks)
+
+
     def process(self, df:DataFrame):
         """Determines whether to execute a sell based on indicator states."""
         
-        self.signal = self.check_signal(df)
+        # this must be done very fast
+        self.signal = self.apply_model_and_check_signal(df)
         self.last_close = df['close'].iloc[-1]          
+        # print data
+        asyncio.create_task(self.print_data(self.last_row_of(df), self.last_close))
         
-        df_row = self.last_row_of(df)
-        
-        self.print_no_repeat("value",f"{self.last_close}")    
-        for key in df_row:
-            if key[-1] == "_":
-                self.print_no_repeat(key,f"{key}: {df_row[key]}")    
-                
-        pass
     
     def onBuy(self):
         self.buy_price = self.last_close
@@ -134,9 +137,8 @@ class SimpleTradingStrategy(AbstractTradingStrategy):
 
         model:DataFrame = pd.concat([model_buy, model_sell], ignore_index=True)
         return model
-        pass
     
-    def check_signal(self, df:DataFrame):
+    def apply_model_and_check_signal(self, df:DataFrame):
         # apply the model to the dataframe
         # match the columns in the model with the columns in the dataframe
         try:
@@ -144,16 +146,13 @@ class SimpleTradingStrategy(AbstractTradingStrategy):
             model_columns = set(self.get_features_list(self.model_df))
             intersect_columns = list(df_columns.intersection(model_columns))
 
-            max_diff = 0
+            # min_diff = 999
             if len(intersect_columns) == len(model_columns):
-                for df_index in range(len(self.model_df)):
-                    if df.loc[df.index[-1], intersect_columns].equals(self.model_df.loc[df_index, intersect_columns]):
-                        return self.model_df.loc[df_index, 'signal']
-                    else:
-                        diff = sum(df.loc[df.index[-1], intersect_columns] != self.model_df.loc[df_index, intersect_columns])
-                        if diff > max_diff:
-                            max_diff = diff
-                self.print_no_repeat("score", "🟢" * (len(intersect_columns) - max_diff) + "🔴" * max_diff)
+                current_df_slice = df.loc[df.index[-1], intersect_columns]
+                for df_model_index in range(len(self.model_df)):
+                    current_model_slice = self.model_df.loc[df_model_index, intersect_columns]
+                    if current_df_slice.equals(current_model_slice):
+                        return self.model_df.loc[df_model_index, 'signal']
                 
         except Exception as e:
             print(f"An error occurred: {str(e)}")
@@ -168,6 +167,7 @@ class SimpleTradingStrategy(AbstractTradingStrategy):
     
     def should_stopbuy(self):
         """Determines whether to stop buying based on indicator states."""
+        # add stop loss and take profit
         return self.buy_price is not None and self.last_close > self.buy_price * 1.05
         pass
     
@@ -178,6 +178,6 @@ class SimpleTradingStrategy(AbstractTradingStrategy):
 
     def should_stopsell(self):
         """Determines whether to stop selling based on indicator states."""
-        # return True
+        # add stop loss and take profit
         return self.sell_price is not None and self.last_close < self.sell_price * 0.95
         pass

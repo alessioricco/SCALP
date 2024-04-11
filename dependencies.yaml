@@ -1,0 +1,124 @@
+columns:
+  stoch_rsi:
+    depends:
+      - close
+
+  stoch_rsi_k:
+    depends:
+      - close
+
+  stoch_rsi_d:
+    depends:
+      - close
+
+  stoch_rsi_overbought_:
+    depends:
+      - stoch_rsi
+      - stoch_rsi_k
+      - stoch_rsi_d
+
+  stoch_rsi_oversold_:
+    depends:
+      - stoch_rsi
+      - stoch_rsi_k
+      - stoch_rsi_d
+
+  stoch_rsi_bullish_crossover_:
+    depends:
+      - stoch_rsi
+      - stoch_rsi_k
+      - stoch_rsi_d
+
+  stoch_rsi_bearish_crossover_:
+    depends:
+      - stoch_rsi
+      - stoch_rsi_k
+      - stoch_rsi_d
+
+  stoch_rsi_slope:
+    depends:
+      - stoch_rsi
+
+  stoch_rsi_k_slope:
+    depends:
+      - stoch_rsi_k
+
+  stoch_rsi_d_slope:
+    depends:
+      - stoch_rsi_d
+
+  stoch_rsi_trend_:
+    depends:
+      - stoch_rsi_slope
+
+  stoch_rsi_change_of_trend_:
+    depends:
+      - stoch_rsi_trend_
+
+  hma:
+    depends:
+      - close
+      - period
+
+  hma_slope:
+    depends:
+      - hma
+
+  hma_trend_:
+    depends:
+      - hma_slope
+
+  hma_change_of_trend_:
+    depends:
+      - hma_trend_
+
+  hma_above_price_:
+    depends:
+      - hma
+      - close
+
+  macd:
+    depends:
+      - close
+
+  macd_signal:
+    depends:
+      - close
+
+  macd_diff:
+    depends:
+      - close
+
+  prev_macd_diff:
+    depends:
+      - macd_diff
+
+  macd_bullish_crossover_:
+    depends:
+      - macd_diff
+      - prev_macd_diff
+
+  macd_bearish_crossover_:
+    depends:
+      - macd_diff
+      - prev_macd_diff
+
+  macd_positive_:
+    depends:
+      - macd_diff
+
+  macd_slope:
+    depends:
+      - macd
+
+  macd_signal_slope:
+    depends:
+      - macd_signal
+
+  macd_trend_:
+    depends:
+      - macd_slope
+
+  macd_change_of_trend_:
+    depends:
+      - macd_trend_
