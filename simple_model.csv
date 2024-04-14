@@ -1,0 +1,3 @@
+macd_trend_,macd_bullish_crossover_,macd_positive_,stoch_rsi_oversold_,macd_bearish_crossover_,stoch_rsi_overbought_,hma200_trend_,hma200_above_price_,signal
+1,True,False,True,False,False,True,False,1
+-1,False,True,False,True,True,False,True,-1

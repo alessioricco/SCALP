@@ -4,11 +4,12 @@ from Strategies.AbstractTradingStrategy import AbstractTradingStrategy
 
 class TradingStateMachine(AbstractDataStateMachine):
     
-    __slots__ = ['_strategy','states']
+    __slots__  = ['_strategy']
     
     def __init__(self, strategy: AbstractTradingStrategy):
         # self.states = ['neutral', 'buy', 'sell', 'stop_buy', 'stop_sell']
         self._strategy = strategy
+        self.balance = 0
         super().__init__()
 
     @property
@@ -58,6 +59,7 @@ class TradingStateMachine(AbstractDataStateMachine):
     def to_stop_buy(self):
         """Attempt to transition to the Stop Buy state if conditions are met."""
         if self.state == 'buy' and self.should_stop_buy():
+            self.balance = self.balance + (self.strategy.last_close-self.strategy.buy_price)
             self.trigger('stop_buy')
 
     def to_sell(self):
@@ -68,8 +70,9 @@ class TradingStateMachine(AbstractDataStateMachine):
     def to_stop_sell(self):
         """Attempt to transition to the Stop Sell state if conditions are met."""
         if self.state == 'sell' and self.should_stop_sell():
+            self.balance = self.balance + (self.strategy.sell_price-self.strategy.last_close)
             self.trigger('stop_sell')
-
+            
     def to_neutral(self):
         """Checks conditions and transitions to Neutral if applicable. This can be from any state."""
         if self.state in ['buy', 'sell', 'stop_buy', 'stop_sell']:
@@ -103,7 +106,7 @@ class TradingStateMachine(AbstractDataStateMachine):
         - df: DataFrame containing market data.
         """
         # Step 1: Process the market data with the strategy.
-        self.strategy.process(df)
+        self.strategy.process(df, self.balance)
 
         # Step 2: Determine the next state based on strategy conditions.
         # The order of these checks is important to ensure logical flow and precedence of states.

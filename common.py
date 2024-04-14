@@ -5,6 +5,16 @@ from typing import List
 import numpy as np
 from pandas import DataFrame, Series
 from scipy.stats import linregress
+from pandas import DataFrame, Series
+import numpy as np
+
+SELL = -1
+BUY = 1
+HOLD = 0
+
+UPTREND = 1
+NEUTRAL = 0
+DOWNTREND = -1
 
 def _calculate_slope(series: List[float]) -> float:
     # Calculate the slope of the linear regression line
@@ -18,23 +28,19 @@ def calc_slope(df:DataFrame,value_column:str="close",window=10)->Series:
 
 def calc_trend(df:DataFrame,slope_column:str,tolerance=0.0001)->Series:
     # Determine the trend based on the slope
-    s = Series(np.where(np.abs(df[slope_column]) <= tolerance, 'Not trending',
-              np.where(df[slope_column] > 0, 'Uptrend', 'Downtrend')))
+    #  -1 downtrend
+    #  0 not trending
+    #  1 uptrend
+    s = Series(np.where(np.abs(df[slope_column]) <= tolerance, 0,
+              np.where(df[slope_column] > 0, 1, -1)))
     return s
 
-def calc_change_of_trend(df: DataFrame, trend_column: str) -> None:
-    return Series( np.where(df[trend_column].shift() != df[trend_column], 
-                                            df[trend_column].shift() + '->' + df[trend_column], 
-                                            '')
-    )
+def calc_change_of_trend(df: DataFrame, trend_column: str) -> Series:
+    return Series(np.where(df[trend_column].shift() != df[trend_column], True, False))
 
 def last_value(df:DataFrame,column:str):
     return df[column].iloc[-1]
 
-
-
-# import numpy as np
-# import pandas as pd
 
 def weighted_moving_average(data, period):
     weights = np.arange(1, period + 1)  # Weighting factors
@@ -47,11 +53,4 @@ def hull_moving_average(data, period):
     hma = weighted_moving_average(raw_hma, int(np.sqrt(period)))  # Final HMA calculation
     return hma
 
-# # Example usage with a DataFrame
-# np.random.seed(42)  # For reproducible random data
-# data = pd.DataFrame({
-#     'Close': np.random.rand(100) * 10 + 100  # Simulating some closing prices
-# })
 
-# data['HMA16'] = hull_moving_average(data['Close'], 16)
-# print(data.tail())

@@ -55,26 +55,26 @@ columns:
     depends:
       - stoch_rsi_trend_
 
-  hma:
+  hma200:
     depends:
       - close
       - period
 
-  hma_slope:
+  hma200_slope:
     depends:
-      - hma
+      - hma200
 
-  hma_trend_:
+  hma200_trend_:
     depends:
-      - hma_slope
+      - hma200_slope
 
-  hma_change_of_trend_:
+  hma200_change_of_trend_:
     depends:
-      - hma_trend_
+      - hma200_trend_
 
-  hma_above_price_:
+  hma200_above_price_:
     depends:
-      - hma
+      - hma200
       - close
 
   macd:
@@ -95,13 +95,13 @@ columns:
 
   macd_bullish_crossover_:
     depends:
-      - macd_diff
-      - prev_macd_diff
+      - macd
+      - macd_signal
 
   macd_bearish_crossover_:
     depends:
-      - macd_diff
-      - prev_macd_diff
+      - macd
+      - macd_signal
 
   macd_positive_:
     depends:
